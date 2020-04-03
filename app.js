@@ -1,19 +1,20 @@
+require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const session  = require('express-session');
+const session = require('express-session');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const mongoose = require('mongoose');
 const passport = require('passport');
-const FacebookStrategy  = require('passport-facebook').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
 const config = require('./configuration/config');
-const where = require('node-where');
-
+// const where = require('node-where');
+const initAPIs = require("./routes/api");
 const app = express();
-mongoose.connect('mongodb://admin2:tlth97!!@ds159696.mlab.com:59696/talo');
+mongoose.connect(process.env.mLab_URL);
 
 mongoose.connection.on('open', () => {
   console.log(`MongoDB connected: ${mongoose.connection.db.databaseName}`);
@@ -24,23 +25,23 @@ mongoose.connection.on('error', (err) => {
 });
 
 // Passport session setup. 
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
   done(null, user);
 });
 
-passport.deserializeUser(function(obj, done) {
+passport.deserializeUser(function (obj, done) {
   done(null, obj);
 });
 
 // Sử dụng FacebookStrategy cùng Passport.
 passport.use(new FacebookStrategy({
-    clientID: config.facebook_api_key,
-    clientSecret:config.facebook_api_secret ,
-    callbackURL: config.callback_url
-  },
-  function(accessToken, refreshToken, profile, done) {
+  clientID: config.facebook_api_key,
+  clientSecret: config.facebook_api_secret,
+  callbackURL: config.callback_url
+},
+  function (accessToken, refreshToken, profile, done) {
     process.nextTick(function () {
-      console.log('ass',accessToken, 'ref', refreshToken, 'profile',profile, 'done',done);
+      console.log('ass', accessToken, 'ref', refreshToken, 'profile', profile, 'done', done);
       return done(null, profile);
     });
   }
@@ -55,23 +56,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({ secret: 'keyboard cat', key: 'sid'}));  //Save user login
+app.use(session({ secret: 'keyboard cat', key: 'sid' }));  //Save user login
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/api/', indexRouter);
-app.use('/api/users', usersRouter);
+
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.header("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  next();
+});
+
+initAPIs(app);
+// app.use('/api/', indexRouter);
+// app.use('/api/users', usersRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 //error handler
-app.use(function(err, req, res, next) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-      res.setHeader('Access-Control-Allow-Credentials', true);
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -92,4 +99,5 @@ app.use(function(err, req, res, next) {
 //         next();
 //     });
 // });
+
 module.exports = app;

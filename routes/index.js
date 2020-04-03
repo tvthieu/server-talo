@@ -12,9 +12,9 @@ router.get('/', function(req, res){
   res.render('index', { user: req.user, title: "fuck boy" });
 });
 router.post("/register", async (req, res) => {
-  let { name, email, password, gender } = req.body;
+  let { fullName, email, password } = req.body;
   if (
-    isEmpty(name) ||
+    isEmpty(fullName) ||
     !isEmail(email) ||
     isEmpty(password)
   ) {
@@ -35,7 +35,7 @@ router.post("/register", async (req, res) => {
         return res.status(500).json({ message: `loi server ${err}` });
       }
       if (doc) {
-        console.log(doc);
+        console.log('user:',doc);
         res.status(200).json({ message: "thanh cong" });
       }
     });
