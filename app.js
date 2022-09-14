@@ -14,7 +14,7 @@ const config = require('./configuration/config');
 // const where = require('node-where');
 const initAPIs = require("./routes/api");
 const app = express();
-mongoose.connect(process.env.atlas_URL);
+mongoose.connect('mongodb://admin2:tlth97!!@ds159696.mlab.com:59696/talo');
 
 mongoose.connection.on('open', () => {
   console.log(`MongoDB connected: ${mongoose.connection.db.databaseName}`);
@@ -70,19 +70,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({ secret: 'keyboard cat', key: 'sid' }));  //Save user login
 app.use(passport.initialize());
 app.use(passport.session());
-
-
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT");
-  res.header("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  next();
-});
-app.options('*', function (req,res) { res.sendStatus(200); });
-
-initAPIs(app);
-// app.use('/api/', indexRouter);
-// app.use('/api/users', usersRouter);
+app.use('/api/', indexRouter);
+app.use('/api/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
